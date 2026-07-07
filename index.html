@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>GAME MATRIX</title>
+  <style>
+    /* ── TOKENS ───────────────────────────────────────────── */
+    :root {
+      --g0: #000000;
+      --g1: #001a00;
+      --g2: #003300;
+      --g3: #006600;
+      --g4: #00cc33;
+      --g5: #00ff41;
+      --g6: #aaffaa;
+      --cyan: #00ffff;
+      --yellow: #ffff00;
+      --magenta: #ff44ff;
+      --orange: #ff8800;
+      --card-bg: rgba(0, 18, 0, 0.80);
+      --card-hover: rgba(0, 35, 0, 0.95);
+      --border: var(--g3);
+      --border-bright: var(--g5);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--g0);
+      color: var(--g5);
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #rain {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,0.10) 3px, rgba(0,0,0,0.10) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 18px 64px;
+    }
+
+    /* ── HEADER ───────────────────────────────────────────── */
+    .header {
+      border: 1px solid var(--g5);
+      padding: 26px 28px 22px;
+      margin-bottom: 32px;
+      background: rgba(0, 0, 0, 0.88);
+      box-shadow:
+        0 0 0 1px var(--g3),
+        0 0 28px rgba(0,255,65,0.20),
+        inset 0 0 28px rgba(0,255,65,0.04);
+      text-align: center;
+    }
+    .header-eyebrow {
+      font-size: 0.68em;
+      letter-spacing: 0.55em;
+      color: var(--g3);
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+    .header-title {
+      font-size: 1.65em;
+      letter-spacing: 0.05em;
+      color: var(--g5);
+      text-shadow: 0 0 14px var(--g5), 0 0 28px rgba(0,255,65,0.4);
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+    .header-platforms {
+      font-size: 0.78em;
+      color: var(--g4);
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      line-height: 1.8;
+    }
+    .header-ids {
+      font-size: 0.68em;
+      color: var(--g3);
+      letter-spacing: 0.10em;
+      margin-bottom: 14px;
+      line-height: 1.9;
+    }
+    .header-ids span { color: var(--g4); }
+    .type-badge {
+      display: inline-block;
+      border: 1px solid var(--g5);
+      padding: 4px 18px;
+      font-size: 0.72em;
+      letter-spacing: 0.40em;
+      color: var(--g5);
+      text-shadow: 0 0 8px var(--g5);
+      box-shadow: 0 0 8px rgba(0,255,65,0.25);
+    }
+
+    /* ── SECTION ──────────────────────────────────────────── */
+    .section { margin-bottom: 30px; }
+    .section-label {
+      font-size: 0.72em;
+      letter-spacing: 0.40em;
+      color: var(--g5);
+      border-bottom: 1px solid var(--g5);
+      padding-bottom: 7px;
+      margin-bottom: 14px;
+      text-shadow: 0 0 6px var(--g5);
+    }
+    .generalist-label {
+      font-size: 0.68em;
+      letter-spacing: 0.35em;
+      color: var(--g3);
+      border-bottom: 1px dashed var(--g3);
+      padding-bottom: 6px;
+      margin: 24px 0 12px;
+    }
+
+    /* ── GRID ─────────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
+      gap: 8px;
+    }
+
+    /* ── CARD ─────────────────────────────────────────────── */
+    .card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--g5);
+      transition: border-color 0.12s, background 0.12s, box-shadow 0.12s, transform 0.12s;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .card:hover {
+      background: var(--card-hover);
+      border-color: var(--border-bright);
+      box-shadow: 0 0 16px rgba(0,255,65,0.30), inset 0 0 8px rgba(0,255,65,0.06);
+      transform: translateX(4px);
+    }
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+    .card-arrow {
+      color: var(--g3);
+      font-size: 0.75em;
+      flex-shrink: 0;
+      transition: color 0.12s;
+    }
+    .card:hover .card-arrow { color: var(--g5); }
+    .card-name {
+      font-size: 0.88em;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── TAGS & ICONS ─────────────────────────────────────── */
+    .tags {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    .tag, .tag-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 4px;
+      border: 1px solid;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .tag {
+      font-size: 0.56em;
+    }
+
+    .tag-icon svg {
+      width: 10px;
+      height: 10px;
+      fill: currentColor;
+    }
+
+    /* Platform Tag Colors */
+    .tag-pc, .tag-phone, .tag-windows, .tag-linux, .tag-mac, .tag-dos { border-color: var(--cyan); color: var(--cyan); }
+    .tag-android, .tag-ios { border-color: var(--orange); color: var(--orange); }
+    .tag-switch { border-color: var(--magenta); color: var(--magenta); }
+    .tag-playstation, .tag-ps5, .tag-ps4 { border-color: var(--yellow); color: var(--yellow); }
+    .tag-xbox, .tag-xbox_series, .tag-xbox_one { border-color: var(--g6); color: var(--g6); }
+    .tag-web, .tag-emulation, .tag-general { border-color: var(--g4); color: var(--g4); }
+
+    /* ── NO-SIGNAL ────────────────────────────────────────── */
+    .no-signal {
+      text-align: center;
+      padding: 80px 24px;
+      border: 1px dashed var(--g3);
+      background: rgba(0,0,0,0.7);
+    }
+    .no-signal-glyph {
+      font-size: 3em;
+      color: var(--g3);
+      display: block;
+      margin-bottom: 20px;
+      animation: flicker 2.4s infinite;
+    }
+    .no-signal-title {
+      font-size: 1.1em;
+      letter-spacing: 0.4em;
+      margin-bottom: 12px;
+    }
+    .no-signal-sub {
+      font-size: 0.76em;
+      color: var(--g3);
+      line-height: 2;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── DOMAIN CHECKER ───────────────────────────────────── */
+    .matrix-checker {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .matrix-input {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 14px;
+      background: rgba(0, 18, 0, 0.8);
+      border: 1px solid var(--g3);
+      color: var(--g5);
+      font-family: inherit;
+      font-size: 0.85em;
+      letter-spacing: 0.05em;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      text-align: center;
+    }
+    .matrix-input:focus {
+      border-color: var(--g5);
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    }
+    .matrix-input::placeholder { color: var(--g3); opacity: 0.7; }
+    .matrix-btn {
+      padding: 10px 24px;
+      background: transparent;
+      border: 1px solid var(--g5);
+      color: var(--g5);
+      font-family: inherit;
+      font-size: 0.75em;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .matrix-btn:hover {
+      background: rgba(0, 255, 65, 0.1);
+      box-shadow: 0 0 12px rgba(0, 255, 65, 0.4);
+    }
+    .matrix-result {
+      margin-top: 10px;
+      font-size: 0.85em;
+      letter-spacing: 0.1em;
+      min-height: 1.2em;
+      text-shadow: 0 0 8px currentColor;
+      text-align: center;
+      line-height: 1.8;
+    }
+    .matrix-result.found { color: var(--g5); }
+    .matrix-result.not-found { color: var(--yellow); }
+    .matrix-result .result-detail {
+      font-size: 0.85em;
+      color: var(--g4);
+      margin-top: 6px;
+    }
+
+    /* ── DEBUG PANEL ──────────────────────────────────────── */
+    .debug-toggle {
+      display: block;
+      width: 100%;
+      margin-top: 40px;
+      padding: 9px 14px;
+      background: transparent;
+      border: 1px dashed var(--g3);
+      color: var(--g3);
+      font-family: inherit;
+      font-size: 0.68em;
+      letter-spacing: 0.25em;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .debug-toggle:hover { border-color: var(--g5); color: var(--g5); }
+    .debug-body {
+      display: none;
+      border: 1px dashed var(--g3);
+      border-top: none;
+      padding: 16px;
+      background: rgba(0,0,0,0.92);
+      font-size: 0.68em;
+      line-height: 2.1;
+      overflow-x: auto;
+    }
+    .debug-body.open { display: block; }
+    .dbk { color: var(--g3); }
+    .dbv { color: var(--g6); }
+    .db-missing { color: var(--g2); font-style: italic; }
+    .db-raw {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--g3);
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--g4);
+      font-size: 0.95em;
+    }
+
+    @keyframes flicker {
+      0%,100% { opacity: 1; }
+      48% { opacity: 1; }
+      50% { opacity: 0.3; }
+      52% { opacity: 1; }
+      93% { opacity: 1; }
+      94% { opacity: 0.5; }
+      96% { opacity: 1; }
+    }
+
+    @media (max-width: 520px) {
+      .header-title { font-size: 1.2em; }
+      .grid { grid-template-columns: 1fr; }
+      #app { padding: 16px 12px 48px; }
+    }
+  </style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div id="app"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ▓▓▓  PLATFORM MAPPING  ▓▓▓
+   Maps InfiniteBacklog / IGDB platform names to internal keys.
+   ═══════════════════════════════════════════════════════════════ */
+const PLATFORM_MAP = {
+  // PC
+  "microsoft windows":"windows","pc (microsoft windows)":"windows","pc":"windows","windows":"windows",
+  "mac":"mac","mac os":"mac","macos":"mac","mac os x":"mac","osx":"mac",
+  "linux":"linux","steam os":"linux",
+  // Mobile
+  "android":"android",
+  "ios":"ios","iphone":"ios","ipad":"ios","apple tv":"ios",
+  // Nintendo
+  "nintendo switch":"switch","switch":"switch",
+  "nintendo 3ds":"n3ds","3ds":"n3ds","new nintendo 3ds":"n3ds",
+  "nintendo ds":"nds","nds":"nds","nintendo ds lite":"nds",
+  "nintendo wii u":"wii_u","wii u":"wii_u","wiiu":"wii_u",
+  "nintendo wii":"wii","wii":"wii",
+  "nintendo gamecube":"gamecube","gamecube":"gamecube","ngc":"gamecube",
+  "nintendo 64":"n64","n64":"n64",
+  "super nintendo entertainment system (snes)":"snes","snes":"snes","super nintendo":"snes","super nintendo entertainment system":"snes",
+  "nintendo entertainment system (nes)":"nes","nes":"nes","nintendo entertainment system":"nes",
+  "game boy advance":"gba","gba":"gba",
+  "game boy color":"gbc","gbc":"gbc",
+  "game boy":"gb","gameboy":"gb","gb":"gb",
+  // PlayStation
+  "playstation 5":"ps5","ps5":"ps5",
+  "playstation 4":"ps4","ps4":"ps4",
+  "playstation 3":"ps3","ps3":"ps3",
+  "playstation 2":"ps2","ps2":"ps2",
+  "playstation":"ps1","ps1":"ps1","psx":"ps1","playstation 1":"ps1",
+  "playstation portable":"psp","psp":"psp",
+  "playstation vita":"psvita","ps vita":"psvita","psvita":"psvita","vita":"psvita",
+  // Xbox
+  "xbox series x|s":"xbox_series","xbox series x":"xbox_series","xbox series s":"xbox_series","xbox series":"xbox_series","series x|s":"xbox_series",
+  "xbox one":"xbox_one","xbox one x":"xbox_one","xbox one s":"xbox_one","xone":"xbox_one",
+  "xbox 360":"xbox_360","xbox360":"xbox_360","x360":"xbox_360",
+  "xbox":"xbox","original xbox":"xbox",
+  // Sega
+  "sega dreamcast":"dreamcast","dreamcast":"dreamcast",
+  "sega saturn":"saturn","saturn":"saturn",
+  "sega mega drive/genesis":"genesis","sega genesis":"genesis","genesis":"genesis","sega mega drive":"genesis","mega drive":"genesis",
+  "sega master system":"sms","master system":"sms","sms":"sms",
+  "sega cd":"segacd","sega 32x":"sega32x",
+  // Other
+  "arcade":"arcade","arcade cabinet":"arcade",
+  "neo geo":"neogeo","neo-geo":"neogeo","neogeo":"neogeo",
+  "turbografx-16":"tg16","turbografx":"tg16","pc engine":"tg16","tg16":"tg16","turbografxcd":"tg16",
+  "3do":"3do","3do interactive multiplayer":"3do",
+  "virtual boy":"virtualboy","virtualboy":"virtualboy",
+  "wonderswan":"wonderswan","wonderswan color":"wonderswan",
+  "atari 2600":"atari2600","atari 5200":"atari5200","atari 7800":"atari7800",
+  "atari lynx":"atarilynx","atari jaguar":"atarijaguar","atari st":"atarist",
+  "commodore 64":"c64","c64":"c64","commodore amiga":"amiga","amiga":"amiga",
+  "msx":"msx","msx2":"msx",
+  "zx spectrum":"zxspectrum",
+  "dos":"dos","ms-dos":"dos",
+  "web browser":"web","browser":"web","web":"web",
+};
+
+/* ── Platform metadata: section grouping + ordering ─────── */
+const PLATFORM_META = {
+  windows:     {label:"WINDOWS",          section:"pc",          order:1},
+  linux:       {label:"LINUX",            section:"pc",          order:2},
+  mac:         {label:"MACOS",            section:"pc",          order:3},
+  dos:         {label:"DOS",              section:"emulation",   order:4},
+  android:     {label:"ANDROID",          section:"phone",       order:5},
+  ios:         {label:"IOS",              section:"phone",       order:6},
+  switch:      {label:"NINTENDO SWITCH",  section:"switch",      order:7},
+  ps5:         {label:"PS5",              section:"playstation", order:8},
+  ps4:         {label:"PS4",              section:"playstation", order:9},
+  xbox_series: {label:"SERIES X|S",       section:"xbox",        order:10},
+  xbox_one:    {label:"ONE",              section:"xbox",        order:11},
+  ps3:         {label:"PLAYSTATION 3",    section:"emulation",   order:12},
+  ps2:         {label:"PLAYSTATION 2",    section:"emulation",   order:13},
+  ps1:         {label:"PLAYSTATION",      section:"emulation",   order:14},
+  psp:         {label:"PSP",              section:"emulation",   order:15},
+  psvita:      {label:"PS VITA",          section:"emulation",   order:16},
+  xbox_360:    {label:"XBOX 360",         section:"emulation",   order:17},
+  xbox:        {label:"XBOX",             section:"emulation",   order:18},
+  n3ds:        {label:"NINTENDO 3DS",     section:"emulation",   order:19},
+  nds:         {label:"NINTENDO DS",      section:"emulation",   order:20},
+  wii_u:       {label:"NINTENDO WII U",   section:"emulation",   order:21},
+  wii:         {label:"NINTENDO WII",     section:"emulation",   order:22},
+  gamecube:    {label:"GAMECUBE",         section:"emulation",   order:23},
+  n64:         {label:"NINTENDO 64",      section:"emulation",   order:24},
+  snes:        {label:"SUPER NINTENDO",   section:"emulation",   order:25},
+  nes:         {label:"NINTENDO",         section:"emulation",   order:26},
+  gba:         {label:"GAME BOY ADVANCE", section:"emulation",   order:27},
+  gbc:         {label:"GAME BOY COLOR",   section:"emulation",   order:28},
+  gb:          {label:"GAME BOY",         section:"emulation",   order:29},
+  dreamcast:   {label:"DREAMCAST",        section:"emulation",   order:30},
+  saturn:      {label:"SEGA SATURN",      section:"emulation",   order:31},
+  genesis:     {label:"SEGA GENESIS",     section:"emulation",   order:32},
+  sms:         {label:"SEGA MASTER SYSTEM",section:"emulation",  order:33},
+  segacd:      {label:"SEGA CD",          section:"emulation",   order:34},
+  sega32x:     {label:"SEGA 32X",         section:"emulation",   order:35},
+  arcade:      {label:"ARCADE",           section:"emulation",   order:36},
+  neogeo:      {label:"NEO GEO",          section:"emulation",   order:37},
+  tg16:        {label:"TURBOGRAFX-16",    section:"emulation",   order:38},
+  "3do":       {label:"3DO",              section:"emulation",   order:39},
+  virtualboy:  {label:"VIRTUAL BOY",      section:"emulation",   order:40},
+  wonderswan:  {label:"WONDERSWAN",       section:"emulation",   order:41},
+  atari2600:   {label:"ATARI 2600",       section:"emulation",   order:42},
+  atari5200:   {label:"ATARI 5200",       section:"emulation",   order:43},
+  atari7800:   {label:"ATARI 7800",       section:"emulation",   order:44},
+  atarilynx:   {label:"ATARI LYNX",       section:"emulation",   order:45},
+  atarijaguar: {label:"ATARI JAGUAR",     section:"emulation",   order:46},
+  atarist:     {label:"ATARI ST",         section:"emulation",   order:47},
+  c64:         {label:"COMMODORE 64",     section:"emulation",   order:48},
+  amiga:       {label:"AMIGA",            section:"emulation",   order:49},
+  msx:         {label:"MSX",              section:"emulation",   order:50},
+  zxspectrum:  {label:"ZX SPECTRUM",      section:"emulation",   order:51},
+  web:         {label:"WEB BROWSER",      section:"web",         order:52},
+};
+
+const SECTION_META = {
+  pc:          {label:"// PC",            order:1},
+  phone:       {label:"// PHONE",         order:2},
+  switch:      {label:"// NINTENDO SWITCH", order:6},
+  playstation: {label:"// PLAYSTATION",   order:7},
+  xbox:        {label:"// XBOX",          order:8},
+  web:         {label:"// WEB BROWSER",   order:11},
+  emulation:   {label:"// EMULATION & ROMs", order:12},
+  general:     {label:"// GENERAL RESOURCES",order:999},
+};
+
+/* ── Platform SVG Icons ─────────────────────────────────── */
+const PLATFORM_ICONS = {
+  windows: '<svg viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>',
+  mac: '<svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>',
+  linux: '<svg viewBox="0 0 24 24"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 0 0-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.132 1.884 1.071.771-.06 1.592-.536 2.257-1.306.631-.765 1.683-1.084 2.378-1.503.348-.199.629-.469.649-.853.023-.4-.2-.811-.714-1.376v-.097l-.003-.003c-.17-.2-.25-.535-.338-.926-.085-.401-.182-.786-.492-1.046h-.003c-.059-.054-.123-.067-.188-.135a.357.357 0 0 0-.19-.064c.431-1.278.264-2.55-.173-3.694-.533-1.41-1.465-2.638-2.175-3.483-.796-1.005-1.576-1.957-1.56-3.368.026-2.152.236-6.133-3.544-6.139z"/></svg>',
+  android: '<svg viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4483.9993.9993 0 .5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4483.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.2439 13.8533 7.8508 12 7.8508s-3.5902.3931-5.1367 1.0989L4.841 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.689-7.5743-6.1185-9.4396"/></svg>',
+  ios: '<svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>',
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   ▓▓▓  SITE DATABASE  ▓▓▓
+   Add or edit sites here. No other code changes needed.
+   
+   Each entry:
+   { name, platforms:[...], url:"template with {TOKENS}" }
+   
+   platforms can be specific ("windows","switch") or broad
+   ("emulation","general").
+   
+   ── AVAILABLE {TOKENS} ─────────────────────────────────────
+   {TITLE}            "Hotline Miami"
+   {TITLE_PLUS}       "Hotline+Miami"
+   {TITLE_SLUG}       "hotline-miami"
+   {TITLE_UNDERSCORE} "hotline_miami"
+   {YEAR}             "2012"
+   {IGDB}             "1942"
+   {INFINITEBACKLOG_ID} "10801219"
+   {PLATFORM}         current section key
+   {PRIMARY_PLATFORM} first platform
+   {GENRES}           "Action, Indie"
+   {DEVELOPER}        "Dennaton Games"
+   {PUBLISHER}        "Devolver Digital"
+   ═══════════════════════════════════════════════════════════════ */
+const SITES = [
+
+  /* ── WINDOWS ───────────────────────────────────────────── */
+  {name:"SteamRip",          platforms:["windows"], url:"https://steamrip.com/{TITLE_SLUG}-free-download/"},
+  {name:"IGG-Games",         platforms:["windows"], url:"https://igg-games.com/{TITLE_SLUG}-free-download.html"},
+  {name:"Skidrow & Reloaded",platforms:["windows"], url:"https://skidrowreloaded.com/?s={TITLE_PLUS}"},
+  {name:"FitGirl",           platforms:["windows"], url:"https://fitgirl-repacks.site/{TITLE_SLUG}"},
+  {name:"DODI Repacks",      platforms:["windows"], url:"https://dodi-repacks.site/{TITLE_SLUG}"},
+  
+  {name:"itch.io",           platforms:["windows","linux","mac"], url:"https://itch.io/search?type=games&classification=game&q={TITLE_PLUS}"},
+  {name:"Steam Store",       platforms:["windows","mac","linux"], url:"https://store.steampowered.com/search/?term={TITLE_PLUS}"},
+  {name:"Epic Games Store",  platforms:["windows","mac"], url:"https://www.epicgames.com/store/en-US/browse?q={TITLE_PLUS}"},
+  {name:"GOG Store",         platforms:["windows","mac"], url:"https://www.gog.com/en/games?query={TITLE_PLUS}"},
+  {name:"Microsoft Store",   platforms:["windows"], url:"https://www.microsoft.com/en-us/search/shop?q={TITLE_PLUS}"},
+  {name:"Humble Bundle",     platforms:["windows","mac","linux"], url:"https://www.humblebundle.com/store/search?search={TITLE}"},
+  {name:"Online-Fix",        platforms:["windows"], url:"https://online-fix.me/index.php?do=search&subaction=search&story={TITLE_PLUS}"},
+
+  /* ── LINUX ─────────────────────────────────────────────── */
+  {name:"ProtonDB",          platforms:["linux","windows","mac"], url:"https://www.protondb.com/search?q={TITLE_PLUS}"},
+  {name:"Lutris",            platforms:["linux"], url:"https://lutris.net/games/{TITLE_SLUG}/"},
+
+  /* ── MAC ───────────────────────────────────────────────── */
+  {name:"Mac App Store",     platforms:["mac"], url:"https://apps.apple.com/us/mac/search?term={TITLE}"},
+
+  /* ── ANDROID ───────────────────────────────────────────── */
+  {name:"APKPure",           platforms:["android"], url:"https://apkpure.com/search?q={TITLE_PLUS}"},
+  {name:"APKVision",         platforms:["android"], url:"https://apkvision.net/?s={TITLE_PLUS}"},
+  {name:"Androeed",          platforms:["android"], url:"https://androeed.store/app/search/{TITLE}"},
+  {name:"Rexdl",             platforms:["android"], url:"https://rexdl.com/?s={TITLE_PLUS}"},
+  {name:"Google Play",       platforms:["android"], url:"https://play.google.com/store/search?q={TITLE_PLUS}&c=apps"},
+  
+  /* ── iOS ───────────────────────────────────────────────── */
+  {name:"App Store",         platforms:["ios"], url:"https://www.apple.com/us/search/{TITLE_PLUS}?src=globalnav"},
+
+  /* ── NINTENDO SWITCH ───────────────────────────────────── */
+ // {name:"SwitchTorrents",    platforms:["switch"], url:"https://www.switchtorrents.com/?s={TITLE_PLUS}"},
+
+  /* ── PLAYSTATION 4/5 ───────────────────────────────────── */
+  {name:"PSN Store",         platforms:["ps4","ps5"], url:"https://store.playstation.com/en-us/search/{TITLE_PLUS}"},
+  {name:"PSNProfiles",       platforms:["ps4","ps5","ps3","psvita"], url:"https://psnprofiles.com/search?q={TITLE_PLUS}"},
+
+  /* ── XBOX ──────────────────────────────────────────────── */
+  {name:"Xbox Store",        platforms:["xbox_series","xbox_one","xbox_360"], url:"https://www.microsoft.com/en-us/search/shop?q={TITLE_PLUS}"},
+  {name:"TrueAchievements",  platforms:["xbox_series","xbox_one","xbox_360"], url:"https://www.trueachievements.com/game/{TITLE_SLUG}/achievements"},
+
+  /* ── EMULATION & ROMs ──────────────────────────────────── */
+  {name:"Romsfun",           platforms:["emulation"], url:"https://romsfun.com/?s={TITLE_PLUS}"},
+  {name:"CDRomance",         platforms:["emulation"], url:"https://cdromance.com/?s={TITLE_PLUS}"},
+  {name:"Vimm's Lair",       platforms:["emulation"], url:"https://vimm.net/vault/?p=search&q={TITLE_PLUS}"},
+  {name:"ROMsMode",          platforms:["emulation"], url:"https://www.romsmode.com/roms/?search={TITLE_PLUS}"},
+  {name:"ROMulation",        platforms:["emulation"], url:"https://www.romulation.org/?q={TITLE_PLUS}"},
+  {name:"Retrostic",         platforms:["emulation"], url:"https://www.retrostic.com/search?searchstring={TITLE_PLUS}"},
+  {name:"WowRoms",           platforms:["emulation"], url:"https://wowroms.com/en/search?q={TITLE_PLUS}"},
+  {name:"ROMsGet",           platforms:["emulation"], url:"https://romsget.com/?s={TITLE_PLUS}"},
+  {name:"DopeRoms",          platforms:["emulation"], url:"https://www.doperoms.com/search.php?q={TITLE_PLUS}"},
+  {name:"PortalRoms",        platforms:["emulation"], url:"https://portalroms.com/search?keywords={TITLE_PLUS}"},
+  {name:"ROMsXL",            platforms:["emulation"], url:"https://romsxl.com/?s={TITLE_PLUS}"},
+  {name:"RetroGames.cc",     platforms:["emulation"], url:"https://www.retrogames.cc/?s={TITLE_PLUS}"},
+  {name:"KillerRoms",        platforms:["emulation"], url:"https://www.killerroms.com/roms?search={TITLE_PLUS}"},
+  {name:"ROMs Heaven",       platforms:["emulation"], url:"https://romsheaven.com/?s={TITLE_PLUS}"},
+  {name:"ROMs Download",     platforms:["emulation"], url:"https://romsdownload.net/?s={TITLE_PLUS}"},
+  {name:"ROMs Planet",       platforms:["emulation"], url:"https://romsplanet.com/?s={TITLE_PLUS}"},
+  {name:"EdgeEmu",           platforms:["emulation"], url:"https://edgeemu.net/search.php?q={TITLE_PLUS}"},
+  {name:"The ROM Depot",     platforms:["emulation"], url:"https://theromdepot.com/roms/?q={TITLE_PLUS}"},
+
+  /* ── GENERAL RESOURCES ─────────────────────────────────── */
+  {name:"IGDB",              platforms:["general"], url:"https://www.igdb.com/games/{TITLE_SLUG}"},
+  {name:"HowLongToBeat",     platforms:["general"], url:"https://howlongtobeat.com/?q={TITLE_PLUS}"},
+  {name:"Metacritic",        platforms:["general"], url:"https://www.metacritic.com/game/{TITLE_SLUG}/"},
+  {name:"GameFAQs",          platforms:["general"], url:"https://gamefaqs.gamespot.com/search?index=0&game={TITLE_PLUS}"},
+  {name:"YouTube (Gameplay)",platforms:["general"], url:"https://www.youtube.com/results?search_query={TITLE_PLUS}+gameplay"},
+  {name:"YouTube (Longplay)",platforms:["general"], url:"https://www.youtube.com/results?search_query={TITLE_PLUS}+longplay"},
+  {name:"YouTube (Review)",  platforms:["general"], url:"https://www.youtube.com/results?search_query={TITLE_PLUS}+review"},
+  {name:"YouTube (Trailer)", platforms:["general"], url:"https://www.youtube.com/results?search_query={TITLE_PLUS}+trailer"},
+  {name:"YouTube (Guide)",   platforms:["general"], url:"https://www.youtube.com/results?search_query={TITLE_PLUS}+guide"},
+  {name:"Reddit",            platforms:["general"], url:"https://www.reddit.com/search/?q={TITLE_PLUS}"},
+  {name:"Google",            platforms:["general"], url:"https://www.google.com/search?q={TITLE_PLUS}+game"},
+  {name:"Twitch",            platforms:["general"], url:"https://www.twitch.tv/search?term={TITLE_PLUS}"},
+  {name:"IsThereAnyDeal",    platforms:["general"], url:"https://isthereanydeal.com/search/?q={TITLE_PLUS}"},
+  {name:"GG.deals",          platforms:["general"], url:"https://gg.deals/search/?title={TITLE}"},
+  {name:"SteamDB",           platforms:["general"], url:"https://steamdb.info/search/?a=app&q={TITLE_PLUS}"},
+  {name:"PCGamingWiki",      platforms:["general"], url:"https://pcgamingwiki.com/w/index.php?search={TITLE_PLUS}"},
+  {name:"GameSpot",          platforms:["general"], url:"https://www.gamespot.com/games/{TITLE_SLUG}/"},
+  {name:"TrueSteamAchievements",platforms:["general"], url:"https://truesteamachievements.com/game/{TITLE_SLUG}/achievements"},
+  {name:"Speedrun.com",      platforms:["general"], url:"https://www.speedrun.com/search?q={TITLE_PLUS}"},
+  {name:"Steam Charts",      platforms:["general"], url:"https://steamcharts.com/search/?q={TITLE_PLUS}"},
+  {name:"IndieDB",           platforms:["general"], url:"https://www.indiedb.com/games/{TITLE_SLUG}"},
+  {name:"ModDB",             platforms:["general"], url:"https://www.moddb.com/games/{TITLE_SLUG}"},
+  {name:"YouTube (Soundtrack)",platforms:["general"], url:"https://www.youtube.com/results?search_query={TITLE_PLUS}+soundtrack"},
+];
+/* ═══════════════════════════════════════════════════════════════
+   END OF SITE CONFIGURATION
+═══════════════════════════════════════════════════════════════ */
+
+
+/* ── Matrix Rain ──────────────────────────────────────────── */
+(function(){
+  const cv=document.getElementById('rain'),cx=cv.getContext('2d');
+  const JP='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+  const EN='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&';
+  const CHARS=JP+EN,SZ=16;let drops=[],W=0,H=0;
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;
+    drops=Array.from({length:Math.ceil(W/SZ)},()=>Math.random()*-(H/SZ));}
+  function tick(){cx.fillStyle='rgba(0,0,0,0.048)';cx.fillRect(0,0,W,H);
+    for(let i=0;i<drops.length;i++){const r=Math.random();
+      cx.fillStyle=r>0.97?'#ccffcc':r>0.85?'#00ff41':'#008f11';
+      cx.font=`${r>0.97?15:13}px Courier New`;
+      cx.fillText(CHARS[Math.floor(Math.random()*CHARS.length)],i*SZ,drops[i]*SZ);
+      if(drops[i]*SZ>H&&Math.random()>0.975)drops[i]=-Math.random()*20;
+      drops[i]+=0.9+Math.random()*0.2;}}
+  resize();addEventListener('resize',resize);setInterval(tick,52);
+})();
+
+/* ── Utility: slugify / plusify / underscoreify ──────────── */
+function slugify(s){return s.normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');}
+function underscoreify(s){return slugify(s).replace(/-/g,'_');}
+function plusify(s){return encodeURIComponent(s).replace(/%20/g,'+');}
+
+/* ── Decode payload from ?gm=<base64> ────────────────────── */
+function decodePayload(){
+  const gm=new URLSearchParams(location.search).get('gm');
+  if(!gm)return null;
+  try{return JSON.parse(decodeURIComponent(atob(gm)));}
+  catch(e){console.error('[GameMatrix] decode failed:',e);return null;}
+}
+
+/* ── Map raw platform string → internal key ──────────────── */
+function mapPlatform(raw){
+  const lower=raw.toLowerCase().trim();
+  if(PLATFORM_MAP[lower])return PLATFORM_MAP[lower];
+  for(const[k,v]of Object.entries(PLATFORM_MAP)){
+    if(lower.includes(k))return v;
+  }
+  if(lower.includes('nintendo')||lower.includes('playstation')||lower.includes('xbox')
+     ||lower.includes('sega')||lower.includes('atari')||lower.includes('commodore')
+     ||lower.includes('arcade')||lower.includes('neo geo')||lower.includes('turbo'))
+    return 'emulation';
+  return null;
+}
+
+/* ── Expand tokens from game data ────────────────────────── */
+function expandTokens(game){
+  const t={};
+  if(game.title){
+    t.TITLE=game.title;
+    t.TITLE_PLUS=plusify(game.title);
+    t.TITLE_SLUG=slugify(game.title);
+    t.TITLE_UNDERSCORE=underscoreify(game.title);
+  }
+  if(game.year)t.YEAR=game.year;
+  if(game.igdb)t.IGDB=String(game.igdb);
+  if(game.infinitebacklog_id)t.INFINITEBACKLOG_ID=String(game.infinitebacklog_id);
+  if(game.slug)t.INFINITEBACKLOG_SLUG=game.slug;
+  if(game.genres&&game.genres.length)t.GENRES=game.genres.join(', ');
+  if(game.developers&&game.developers.length)t.DEVELOPER=game.developers[0];
+  if(game.publishers&&game.publishers.length)t.PUBLISHER=game.publishers[0];
+  if(game.platforms&&game.platforms.length){
+    const firstKey = mapPlatform(game.platforms[0]);
+    if(firstKey) t.PRIMARY_PLATFORM = firstKey;
+  }
+  return t;
+}
+
+/* ── Tokens that are already URL-safe ────────────────────── */
+const RAW_SAFE=new Set([
+  'TITLE_SLUG','TITLE_UNDERSCORE','TITLE_PLUS',
+  'IGDB','INFINITEBACKLOG_ID','YEAR',
+  'PLATFORM','PRIMARY_PLATFORM'
+]);
+
+/* ── Resolve URL template ────────────────────────────────── */
+function resolveUrl(tmpl, tokens, matchedPlatforms) {
+  return tmpl.replace(/\{([^}]+)\}/g, (_, rawKey) => {
+    const key = rawKey.trim();
+    let val;
+    
+    // Resolve {PLATFORM} token to the first matched platform for this site
+    if (key === 'PLATFORM') {
+      val = matchedPlatforms && matchedPlatforms.length > 0 ? matchedPlatforms[0] : tokens.PRIMARY_PLATFORM;
+    } else {
+      val = tokens[key];
+    }
+    
+    if (val === undefined || val === '' || val === '0') return '';
+    return RAW_SAFE.has(key) ? val : encodeURIComponent(val);
+  });
+}
+
+/* ── Get sorted internal platform keys for the game ──────── */
+function getGamePlatformKeys(game) {
+  const keys = new Set();
+  if (game.platforms && game.platforms.length > 0) {
+    for (const raw of game.platforms) {
+      const key = mapPlatform(raw);
+      if (key) keys.add(key);
+    }
+  }
+  // Sort by platform order
+  return [...keys].sort((a, b) => (PLATFORM_META[a]?.order || 999) - (PLATFORM_META[b]?.order || 999));
+}
+
+/* ── Check if site supports a specific platform key ──────── */
+function siteSupportsPlatform(site, platformKey) {
+  if (site.platforms.includes(platformKey)) return true;
+  const sec = PLATFORM_META[platformKey]?.section;
+  if (sec && site.platforms.includes(sec)) return true;
+  return false;
+}
+
+/* ── Group sites by their first matched section ──────────── */
+function getSitesForGame(game) {
+  const gamePlatformKeys = getGamePlatformKeys(game);
+  const sitesBySection = new Map(); // sectionKey -> { sites: [], platforms: Set }
+  
+  for (const site of SITES) {
+    // Handle general sites separately so they don't get grouped into PC/etc.
+    if (site.platforms.includes('general')) {
+      if (!sitesBySection.has('general')) {
+        sitesBySection.set('general', { sites: [], platforms: new Set() });
+      }
+      sitesBySection.get('general').sites.push({ site, matchedPlatforms: [] });
+      continue;
+    }
+
+    const matchedPlatforms = [];
+    for (const key of gamePlatformKeys) {
+      if (siteSupportsPlatform(site, key)) {
+        matchedPlatforms.push(key);
+      }
+    }
+    
+    if (matchedPlatforms.length > 0) {
+      const firstPlatform = matchedPlatforms[0];
+      const sectionKey = PLATFORM_META[firstPlatform]?.section || firstPlatform;
+      
+      if (!sitesBySection.has(sectionKey)) {
+        sitesBySection.set(sectionKey, { sites: [], platforms: new Set() });
+      }
+      sitesBySection.get(sectionKey).sites.push({ site, matchedPlatforms });
+    }
+  }
+  
+  // Record which platforms the game actually has in each section
+  for (const [sec, data] of sitesBySection.entries()) {
+    for (const key of gamePlatformKeys) {
+      const meta = PLATFORM_META[key];
+      if (meta && meta.section === sec) {
+        data.platforms.add(key);
+      }
+    }
+    if (sec === 'general') {
+      data.platforms.add('general');
+    }
+  }
+  
+  return sitesBySection;
+}
+
+/* ── Tags HTML ───────────────────────────────────────────── */
+function tagsHtml(matchedPlatforms, suppressTags) {
+  // Suppress if explicitly told (e.g. general category or only 1 platform in the section)
+  if (suppressTags || !matchedPlatforms || matchedPlatforms.length === 0) return '';
+  
+  const tags = matchedPlatforms.map(key => {
+    const sec = PLATFORM_META[key]?.section || 'default';
+    const icon = PLATFORM_ICONS[key];
+    
+    if (icon) {
+      return `<span class="tag-icon tag-${sec}">${icon}</span>`;
+    }
+    
+    const label = PLATFORM_META[key]?.label || key.toUpperCase();
+    return `<span class="tag tag-${sec}">${label}</span>`;
+  });
+  
+  return '<span class="tags">' + tags.join('') + '</span>';
+}
+
+/* ── Card HTML ───────────────────────────────────────────── */
+function cardHtml(site, tokens, matchedPlatforms, sectionPlatformCount, sectionKey) {
+  const href = resolveUrl(site.url, tokens, matchedPlatforms);
+  // Suppress tags if it's the general section, or if the game only supports 1 platform in this section
+  const suppressTags = (sectionKey === 'general') || (sectionPlatformCount <= 1);
+  const tags = tagsHtml(matchedPlatforms, suppressTags);
+  return `<a class="card" href="${href}" target="_blank" rel="noopener noreferrer">
+    <span class="card-left">
+      <span class="card-arrow">&#9654;</span>
+      <span class="card-name">${site.name}</span>
+    </span>
+    ${tags}
+  </a>`;
+}
+
+/* ── Domain extractor ────────────────────────────────────── */
+function getDomain(urlString){
+  if(!urlString)return '';
+  let d=urlString.replace(/^(https?:\/\/)?(www\.)?/i,'');
+  d=d.split(/[\/:\?#]/)[0];
+  return d.toLowerCase();
+}
+
+/* ── Domain Checker ──────────────────────────────────────── */
+function initDomainChecker(){
+  const input=document.getElementById('site-check-input');
+  const btn=document.getElementById('site-check-btn');
+  const result=document.getElementById('site-check-result');
+  if(!input||!btn||!result)return;
+  
+  function check(){
+    const val=input.value.trim();
+    if(!val){result.textContent='';result.className='matrix-result';return;}
+    const inputDomain=getDomain(val);
+    let found=null;
+    for(const site of SITES){
+      if(getDomain(site.url)===inputDomain){found=site;break;}
+    }
+    if(found){
+      const plats=found.platforms.join(', ').toUpperCase();
+      result.innerHTML=`> DOMAIN FOUND IN MATRIX<div class="result-detail">Platforms: ${plats}</div>`;
+      result.className='matrix-result found';
+    }else{
+      result.innerHTML=`> UNKNOWN DOMAIN<div class="result-detail">Not in Game Matrix database</div>`;
+      result.className='matrix-result not-found';
+    }
+  }
+  btn.addEventListener('click',check);
+  input.addEventListener('keypress',e=>{if(e.key==='Enter')check();});
+}
+
+/* ── Main Render ─────────────────────────────────────────── */
+function render(){
+  const app=document.getElementById('app');
+  const game=decodePayload();
+  
+  /* ── No signal ── */
+  if(!game){
+    app.innerHTML=`
+      <div class="no-signal">
+        <span class="no-signal-glyph">◈</span>
+        <div class="no-signal-title">[ NO SIGNAL RECEIVED ]</div>
+        <div class="no-signal-sub">
+          This page should be opened from an InfiniteBacklog game page.<br>
+          Install the Game Matrix userscript and click the button on any game.
+        </div>
+        <div class="matrix-checker">
+          <input type="text" id="site-check-input" class="matrix-input" placeholder="Enter website domain to check...">
+          <button id="site-check-btn" class="matrix-btn">CHECK DOMAIN</button>
+          <div id="site-check-result" class="matrix-result"></div>
+        </div>
+      </div>`;
+    initDomainChecker();
+    return;
+  }
+  
+  /* ── Incomplete signal ── */
+  if(!game.title){
+    app.innerHTML=`
+      <div class="no-signal">
+        <span class="no-signal-glyph">⚠</span>
+        <div class="no-signal-title">[ INCOMPLETE SIGNAL ]</div>
+        <div class="no-signal-sub">
+          Game title was not found in the received payload.<br>
+          Raw data: ${JSON.stringify(game).substring(0,200)}...
+        </div>
+        <div class="matrix-checker">
+          <input type="text" id="site-check-input" class="matrix-input" placeholder="Enter website domain to check...">
+          <button id="site-check-btn" class="matrix-btn">CHECK DOMAIN</button>
+          <div id="site-check-result" class="matrix-result"></div>
+        </div>
+      </div>`;
+    initDomainChecker();
+    return;
+  }
+  
+  /* ── Expand tokens ── */
+  const tokens=expandTokens(game);
+  
+  /* ── Build header ── */
+  const title=game.title||'';
+  const year=game.year?` (${game.year})`:'';
+  
+  let platformsLine='';
+  if(game.platforms&&game.platforms.length>0){
+    platformsLine=`<div class="header-platforms">${game.platforms.join(' · ')}</div>`;
+  }
+  
+  const idParts=[
+    game.igdb&&`IGDB <span>${game.igdb}</span>`,
+    game.slug&&`IB <span>${game.slug}</span>`,
+    game.infinitebacklog_id&&`IB-ID <span>${game.infinitebacklog_id}</span>`,
+  ].filter(Boolean);
+  
+  let html=`
+    <div class="header">
+      <div class="header-eyebrow">◈ GAME MATRIX ◈</div>
+      <div class="header-title">${title}${year}</div>
+      ${platformsLine}
+      ${idParts.length?`<div class="header-ids">${idParts.join('  ·  ')}</div>`:''}
+      <div class="type-badge">GAME</div>
+    </div>`;
+  
+  /* ── Determine sections ── */
+  const sitesBySection = getSitesForGame(game);
+  
+  // Sort sections by order
+  const sortedSections = [...sitesBySection.entries()].sort((a, b) => {
+    const orderA = SECTION_META[a[0]]?.order || 999;
+    const orderB = SECTION_META[b[0]]?.order || 999;
+    return orderA - orderB;
+  });
+  
+  /* ── Render each section ── */
+  for (const [sectionKey, data] of sortedSections) {
+    const secMeta = SECTION_META[sectionKey];
+    if (!secMeta) continue;
+    
+    const sites = data.sites;
+    if (sites.length === 0) continue;
+    
+    let label = secMeta.label;
+    const platformCount = data.platforms.size;
+    
+    // Dynamic label for grouped sections (PC, Phone, PlayStation, Xbox)
+    if (['pc', 'phone', 'playstation', 'xbox'].includes(sectionKey)) {
+      if (platformCount === 1) {
+        const singlePlatKey = [...data.platforms][0];
+        label = PLATFORM_META[singlePlatKey]?.label || secMeta.label;
+      } else {
+        label = secMeta.label;
+      }
+    }
+    
+    // Emulation label logic
+    if (sectionKey === 'emulation' && platformCount > 1) {
+      label += ' [' + [...data.platforms].map(k => PLATFORM_META[k]?.label || k).join(', ') + ']';
+    }
+    
+    const labelClass = sectionKey === 'general' ? 'generalist-label' : 'section-label';
+    
+    html += `
+      <div class="section">
+        <div class="${labelClass}">${label}</div>
+        <div class="grid">${sites.map(s => cardHtml(s.site, tokens, s.matchedPlatforms, platformCount, sectionKey)).join('')}</div>
+      </div>`;
+  }
+  
+  /* ── Debug panel ── */
+  const debugFields=[
+    ['title','TITLE'],
+    ['igdb','IGDB ID'],
+    ['infinitebacklog_id','InfiniteBacklog ID'],
+    ['slug','InfiniteBacklog Slug'],
+    ['year','Release Year'],
+    ['platforms','Platforms'],
+    ['genres','Genres'],
+    ['developers','Developers'],
+    ['publishers','Publishers'],
+    ['cover','Cover Image'],
+    ['franchise','Franchise'],
+    ['themes','Themes'],
+    ['modes','Modes'],
+    ['rating','Rating'],
+  ];
+  
+  const dbRows=debugFields.map(([key,label])=>{
+    const v=game[key];
+    if(v===undefined||v===null||v===''){
+      return `<span class="db-missing">${label} — not provided</span>`;
+    }
+    const display=Array.isArray(v)?v.join(', '):v;
+    return `<span class="dbk">${label}</span> = <span class="dbv">${display}</span>`;
+  }).join('<br>');
+  
+  const rawJson=JSON.stringify(game,null,2);
+  
+  html+=`
+    <button class="debug-toggle" onclick="this.nextElementSibling.classList.toggle('open')">
+      &#9654; SHOW RAW SIGNAL DATA
+    </button>
+    <div class="debug-body">
+      ${dbRows}
+      <div class="db-raw">${rawJson.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    </div>`;
+  
+  app.innerHTML=html;
+}
+
+render();
+</script>
+</body>
+</html>
